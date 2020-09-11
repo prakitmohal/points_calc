@@ -140,10 +140,10 @@ for x in range(numOptions):
         print "Row populated:", x, "out of:", numOptions, "percent complete:", \
                 "{:.2%}".format(float(x)/numOptions)    
 
-# Display the top 10 options and make it look pretty
+# Display the top 50 options and make it look pretty
 print ("\n")
 
-options = options.nlargest(10,"profit")
+options = options.nlargest(50,"profit")
 options['profit'] = options['profit'].map("${:,.2f}".format)
 
 print options.to_string(index=False)
