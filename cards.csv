@@ -1,8 +1,8 @@
 card,issuer,fee,benefits
 plat,amex,550,200
 gold,amex,250,100
-pref,amex,95,0
 green,amex,150,0
+pref,amex,95,0
 everyday,amex,0,0
 csr,chase,625,300
 csp,chase,95,0
