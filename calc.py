@@ -145,4 +145,6 @@ print ("\n")
 
 options = options.nlargest(10,"profit")
 options['profit'] = options['profit'].map("${:,.2f}".format)
+
 print options.to_string(index=False)
+options.to_csv("output.csv",index=None)

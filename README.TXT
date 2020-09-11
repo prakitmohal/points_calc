@@ -1,6 +1,6 @@
 Q: What does this thing do?
 A: Brute forces credit card combinations to determine the best credit card to use
-for each category
+for each category. Results will print in the terminal along with a file called output.csv
 
 Q: Isn't there a more efficient way to do this?
 A: I'm a product manager not a dev
@@ -45,5 +45,5 @@ Example: Amex Green gives 3% cash back on travel while CFF gives 3% on Restauran
 If you value Amex points higher than Chase points you're better off holding the CSP
 and not putting categoried spend on it so that the Freedom points are worth a lot more
 
-Q: Surely there must be a better way to do this
+Q: Surely there must be a better way to do that
 A: There probably is. And don't call me Shirley
