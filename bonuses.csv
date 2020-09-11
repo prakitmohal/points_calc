@@ -30,7 +30,7 @@ hotels,double,2
 hotels,cfu,1.5
 other,cfu,1.5
 other,pref,1.5
-other,double,0
+other,double,2
 rest,prestige,5
 rest,gold,4
 rest,cfu,3
