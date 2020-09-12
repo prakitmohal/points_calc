@@ -17,23 +17,23 @@ A:
 Q: What are each of the sheets
 A: Each sheet is a CSV file with the following
 
-spending.csv: The yearly spending given a category. You'll need to fill these in with your
+annualSpend.csv: The yearly spending given a category. You'll need to fill these in with your
 specific categories and your yearly spending
 
-bonuses.csv: The category of spend, the card that it's put on, and the points multiplyer
-- If a category is in spending.csv it MUST be in bonuses.csv
-- However, a category in bonuses.csv that isn't in spending.csv will be skipped
+multipliers.csv: The category of spend, the card that it's put on, and the points multiplyer
+- If a category is in annualSpend.csv it MUST be in multipliers.csv
+- However, a category in multipliers.csv that isn't in annualSpend.csv will be skipped
 - The more cards that are listed the longer the script takes, so the easiest way is to analyze only a few
-categories at a time in spending.csv
+categories at a time in annualSpend.csv
 - NOTE: some Amex cards require a minimum amount of swipes to get the elevated bonus,
 this assumes that you will always hit that amount
 
-cards.csv: this is a list of credit cards, the issuer, the annual fee, and the benefits that you
+fees.csv: this is a list of credit cards, the issuer, the annual fee, and the benefits that you
 personally receive from them. Everyone values their benefits differently
-- Each credit card in bonuses.csv MUST match one in cards.csv
-- However, if a card is in cards.csv it doesn't have to match one in bonuses.csv
+- Each credit card in multipliers.csv MUST match one in fees.csv
+- However, if a card is in fees.csv it doesn't have to match one in multipliers.csv
 
-values.csv: The value of each point per issuer
+pointValues.csv: The value of each point per issuer
 - The script takes into account that in order to do points transfers an annual fee card
 from chase or citi are required. If that condition is not met a default value is used
 
