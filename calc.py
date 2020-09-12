@@ -34,12 +34,6 @@ for x in range(numCats):
     bonusSplit[x]["points"] = 0
     bonusSplit[x].points = bonusSplit[x]["mult"] * spending.yearly_spending[x]
    
-    # store dummy category names
-    if bonusSplit[x].category.iloc[0] == "dummyChase":
-        dummyChase = True
-    elif bonusSplit[x].category.iloc[0] == "dummyCiti":
-        dummyCiti = True
-
     if debug:
         print "[DB]Category:", bonusSplit[x].category.iloc[0], \
         "Spend:", spending.yearly_spending[x], \
@@ -164,7 +158,7 @@ for x in range(numOptions):
             curIndex[y+1] = curIndex[y+1] + 1
     
     if(x % 100 == 0):
-        print "Row populated:", x, "out of:", numOptions, "percent complete:", \
+        print "Row populated", x, "out of", numOptions, "- percent complete:", \
                 "{:.2%}".format(float(x)/numOptions)    
 
 # Display the top 50 options and make it look pretty
