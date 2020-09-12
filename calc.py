@@ -33,7 +33,13 @@ for x in range(numCats):
     # convert the yearly spending into points
     bonusSplit[x]["points"] = 0
     bonusSplit[x].points = bonusSplit[x]["mult"] * spending.yearly_spending[x]
-    
+   
+    # store dummy category names
+    if bonusSplit[x].category.iloc[0] == "dummyChase":
+        dummyChase = True
+    elif bonusSplit[x].category.iloc[0] == "dummyCiti":
+        dummyCiti = True
+
     if debug:
         print "[DB]Category:", bonusSplit[x].category.iloc[0], \
         "Spend:", spending.yearly_spending[x], \
@@ -44,14 +50,13 @@ for x in range(numCats):
 
     # reset the index
     bonusSplit[x].reset_index(inplace = True, drop = True)
-
+    
     # create the column name and start counting rows
     header.append(bonusSplit[x].category[0])
     
     curIndex[x] = 0
     maxIndex[x] = len(bonusSplit[x])
     numOptions = numOptions * maxIndex[x]
-
 
 # initialize options list
 options = pandas.DataFrame(columns = header)
@@ -68,6 +73,10 @@ for x in range(numOptions):
     pointList = []
     fee = 0
     revenue = 0
+    dummyCsp = False
+    dummyCsr = False
+    dummyPrestige = False
+    dummyPremier = False
     chaseTx = False
     citiTx = False
 
@@ -77,51 +86,72 @@ for x in range(numOptions):
         rowList.append( bonusSplit[y].card[curIndex[y]] )
         pointList.append( bonusSplit[y].points[curIndex[y]] )
 
-    # remove duplicates so we only add fees once
-    cardLookup = list(set(rowList))
+        # note that an annual fee card is in the dummy slot for chase or citi
+        if (bonusSplit[y].category.iloc[0] == "dummyChase") and (bonusSplit[y].card[curIndex[y]] == "csp"):
+            dummyCsp = True
+        elif (bonusSplit[y].category.iloc[0] == "dummyChase") and (bonusSplit[y].card[curIndex[y]] == "csr"):
+            dummyCsr = True
+        elif (bonusSplit[y].category.iloc[0] == "dummyCiti") and (bonusSplit[y].card[curIndex[y]] == "prestige"):
+            dummyPrestige = True
+        elif (bonusSplit[y].category.iloc[0] == "dummyCiti") and (bonusSplit[y].card[curIndex[y]] == "premier"):
+            dummyPremier = True
+
+    # If the dummy card is a CSP/CSR AND it appears in the list for spend, 
+    # we're going to get a duplicate entry. don't process it
+    if not ((dummyCsp == True and rowList.count("csp") > 1) or \
+       (dummyCsr == True and rowList.count("csr") > 1) or \
+       (dummyPrestige == True and rowList.count("prestige") > 1) or \
+       (dummyPremier == True and rowList.count("premier") > 1)):
+
+        # remove duplicates so we only add fees once
+        cardLookup = list(set(rowList))
             
-    # match them up with the card list 
-    for y in range(len(cardLookup)):
+        # match them up with the card list 
+        for y in range(len(cardLookup)):
 
-        fee = fee - cards.loc[cardLookup[y],"fee"] + cards.loc[cardLookup[y],"benefits"]
+            fee = fee - cards.loc[cardLookup[y],"fee"] + cards.loc[cardLookup[y],"benefits"]
 
-        # chase and citi require certain cards to get the full value
-        # set the flags where appropriate
-        if (cardLookup[y] == "csp") or (cardLookup[y] == "csr"):
-            chaseTx = True
-        if (cardLookup[y] == "premier") or (cardLookup[y] == "prestige"):
-            citiTx = True
+            # chase and citi require certain cards to get the full value
+            # set the flags where appropriate
+            if (cardLookup[y] == "csp") or (cardLookup[y] == "csr"):
+                chaseTx = True
+            elif (cardLookup[y] == "premier") or (cardLookup[y] == "prestige"):
+                citiTx = True
 
-    if debug:
-        print "[DB]Fee:", fee
+        if debug:
+            print "[DB]Fee:", fee
 
-    # now we can go through the row and calculate the revenue
-    for y in range(numCats):
+        # now we can go through the row and calculate the revenue
+        for y in range(numCats):
 
-        # Look up the issuer
-        issuer= cards.loc[rowList[y],"issuer"]
+            # Look up the issuer
+            issuer= cards.loc[rowList[y],"issuer"]
         
-        # calculate revenue
-        if (issuer == "amex"):
-            revenue = pointList[y] * amex + revenue
+            # calculate revenue
+            if (issuer == "amex"):
+                revenue = pointList[y] * amex + revenue
             
-            if debug:
-                print "[DB]AmexPts:", pointList[y], "val:", amex, "total:", pointList[y] * amex
-
-        if (issuer == "chase"):
-            if (chaseTx == True):
-                revenue = pointList[y] * chase + revenue
-                
                 if debug:
-                    print "[DB]ChaseTxTruePts:", pointList[y], "val:", chase, "total:", pointList[y] * chase
-            else:
-                revenue = pointList[y] * default + revenue
+                    print "[DB]AmexPts:", pointList[y], "val:", amex, "total:", pointList[y] * amex
+
+            if (issuer == "chase"):
+                if (chaseTx == True):
+                    revenue = pointList[y] * chase + revenue
+                
+                    if debug:
+                        print "[DB]ChaseTxTruePts:", pointList[y], "val:", chase, "total:", pointList[y] * chase
+                else:
+                    revenue = pointList[y] * default + revenue
         
-        if (issuer == "citi"):
-            if (citiTx == True):
-                revenue = pointList[y] * citi + revenue
-            else:
-                revenue = pointList[y] * default + revenue
+            if (issuer == "citi"):
+                if (citiTx == True):
+                    revenue = pointList[y] * citi + revenue
+                else:
+                    revenue = pointList[y] * default + revenue
+    
+        # add the row to the table
+        rowList.append( revenue + fee )
+        options.loc[x] = rowList
 
     # update indexes, check for overflow and adjust accordingly
     curIndex[0] = curIndex[0] + 1
@@ -132,9 +162,6 @@ for x in range(numOptions):
 
             curIndex[y] = 0
             curIndex[y+1] = curIndex[y+1] + 1
-    
-    rowList.append( revenue + fee )
-    options.loc[x] = rowList
     
     if(x % 100 == 0):
         print "Row populated:", x, "out of:", numOptions, "percent complete:", \
