@@ -20,7 +20,7 @@ A: Each sheet is a CSV file with the following
 annualSpend.csv: The yearly spending given a category. You'll need to fill these in with your
 specific categories and your yearly spending
 
-multipliers.csv: The category of spend, the card that it's put on, and the points multiplyer
+multipliers.csv: The category of spend, the card that it's put on, and the points multiplier
 - If a category is in annualSpend.csv it MUST be in multipliers.csv
 - However, a category in multipliers.csv that isn't in annualSpend.csv will be skipped
 - The more cards that are listed the longer the script takes, so the easiest way is to analyze only a few
