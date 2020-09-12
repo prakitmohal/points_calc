@@ -53,7 +53,7 @@ for x in range(numCats):
     numOptions = numOptions * maxIndex[x]
 
 # create header for dictionary
-header.append("profit")
+header.extend(("amexPts","chasePts","citiPts","fee","credits","profit"))
 options = []
 
 print "Table Initialized with rows:",numOptions
@@ -65,8 +65,12 @@ for x in range(numOptions):
     rowList = []
     cardLookup = []
     pointList = []
+    amexPts = 0
+    chasePts = 0
+    citiPts = 0
     fee = 0
-    revenue = 0
+    credits = 0
+    profit = 0
     dummyChase = False
     dummyCiti = False
     chaseTx = False
@@ -95,7 +99,8 @@ for x in range(numOptions):
         # match them up with the card list 
         for y in range(len(cardLookup)):
 
-            fee = fee - fees.loc[cardLookup[y],"fee"] + fees.loc[cardLookup[y],"benefits"]
+            fee = fee - fees.loc[cardLookup[y],"fee"]
+            credits = credits + fees.loc[cardLookup[y],"benefits"]
 
             # chase and citi require certain cards to get the full value
             # set the flags where appropriate
@@ -104,39 +109,34 @@ for x in range(numOptions):
             elif (cardLookup[y] == "premier") or (cardLookup[y] == "prestige"):
                 citiTx = True
 
-        if debug:
-            print "[DB]Fee:", fee
-
-        # now we can go through the row and calculate the revenue
+        # now we can go through the row and calculate the points
         for y in range(numCats):
 
             # Look up the issuer
             issuer= fees.loc[rowList[y],"issuer"]
         
-            # calculate revenue
+            # calculate points and add to profit
             if (issuer == "amex"):
-                revenue = pointList[y] * amex + revenue
-            
-                if debug:
-                    print "[DB]AmexPts:", pointList[y], "val:", amex, "total:", pointList[y] * amex
-
-            if (issuer == "chase"):
-                if (chaseTx == True):
-                    revenue = pointList[y] * chase + revenue
+                amexPts = amexPts + pointList[y]
+            elif (issuer == "chase"):
+                chasePts = chasePts + pointList[y]
+            elif (issuer == "citi"):
+                citiPts = citiPts + pointList[y]
                 
-                    if debug:
-                        print "[DB]ChaseTxTruePts:", pointList[y], "val:", chase, "total:", pointList[y] * chase
-                else:
-                    revenue = pointList[y] * default + revenue
+        profit = fee + credits + (amexPts * amex)
+
+        if (chaseTx == True):
+            profit = chasePts * chase + profit
+        else:
+            profit = chasePts * default + profit
+
+        if (citiTx == True):
+            profit = citiPts * citi + profit
+        else:
+            profit = citiPts * default + profit
         
-            if (issuer == "citi"):
-                if (citiTx == True):
-                    revenue = pointList[y] * citi + revenue
-                else:
-                    revenue = pointList[y] * default + revenue
-    
         # add the row to the table
-        rowList.append( revenue + fee )
+        rowList.extend((amexPts,chasePts,citiPts,fee,credits,profit))
         options.append(rowList)
 
     # update indexes, check for overflow and adjust accordingly
@@ -159,6 +159,13 @@ print ("\n")
 optionsFrame = pandas.DataFrame.from_dict(options)
 optionsFrame.columns = header
 optionsFrame = optionsFrame.nlargest(50,"profit")
+
+optionsFrame['amexPts'] = optionsFrame['amexPts'].map("{:,.0f}".format)
+optionsFrame['chasePts'] = optionsFrame['chasePts'].map("{:,.0f}".format)
+optionsFrame['citiPts'] = optionsFrame['citiPts'].map("{:,.0f}".format)
+
+optionsFrame['fee'] = optionsFrame['fee'].map("${:,.2f}".format)
+optionsFrame['credits'] = optionsFrame['credits'].map("${:,.2f}".format)
 optionsFrame['profit'] = optionsFrame['profit'].map("${:,.2f}".format)
 
 print optionsFrame.to_string(index=False)
