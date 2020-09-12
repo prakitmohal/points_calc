@@ -154,7 +154,7 @@ for x in range(numOptions):
                 "{:.2%}".format(float(x)/numOptions)    
 
 # Display the top 50 options and make it look pretty
-print ("\n")
+print ("Analyzing results, please be patient, may take around a minute")
 
 optionsFrame = pandas.DataFrame.from_dict(options)
 optionsFrame.columns = header
@@ -168,5 +168,6 @@ optionsFrame['fee'] = optionsFrame['fee'].map("${:,.2f}".format)
 optionsFrame['credits'] = optionsFrame['credits'].map("${:,.2f}".format)
 optionsFrame['profit'] = optionsFrame['profit'].map("${:,.2f}".format)
 
+print ("\n")
 print optionsFrame.to_string(index=False)
 optionsFrame.to_csv("output.csv",index=None)
