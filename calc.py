@@ -67,10 +67,8 @@ for x in range(numOptions):
     pointList = []
     fee = 0
     revenue = 0
-    dummyCsp = False
-    dummyCsr = False
-    dummyPrestige = False
-    dummyPremier = False
+    dummyChase = False
+    dummyCiti = False
     chaseTx = False
     citiTx = False
 
@@ -82,20 +80,14 @@ for x in range(numOptions):
 
         # note that an annual fee card is in the dummy slot for chase or citi
         if (bonusSplit[y].category.iloc[0] == "dummyChase") and (bonusSplit[y].card[curIndex[y]] == "csp"):
-            dummyCsp = True
-        elif (bonusSplit[y].category.iloc[0] == "dummyChase") and (bonusSplit[y].card[curIndex[y]] == "csr"):
-            dummyCsr = True
-        elif (bonusSplit[y].category.iloc[0] == "dummyCiti") and (bonusSplit[y].card[curIndex[y]] == "prestige"):
-            dummyPrestige = True
+            dummyChase = True
         elif (bonusSplit[y].category.iloc[0] == "dummyCiti") and (bonusSplit[y].card[curIndex[y]] == "premier"):
-            dummyPremier = True
+            dummyCiti = True
 
     # If the dummy card is a CSP/CSR AND it appears in the list for spend, 
     # we're going to get a duplicate entry. don't process it
-    if not ((dummyCsp == True and rowList.count("csp") > 1) or \
-       (dummyCsr == True and rowList.count("csr") > 1) or \
-       (dummyPrestige == True and rowList.count("prestige") > 1) or \
-       (dummyPremier == True and rowList.count("premier") > 1)):
+    if not ((dummyChase == True and rowList.count("csp") > 1) or \
+            (dummyCiti == True and rowList.count("premier") > 1)):
 
         # remove duplicates so we only add fees once
         cardLookup = list(set(rowList))
