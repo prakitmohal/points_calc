@@ -44,7 +44,7 @@ for x in range(numCats):
 
     # reset the index
     bonusSplit[x].reset_index(inplace = True, drop = True)
-    
+
     # create the column name and start counting rows
     header.append(bonusSplit[x].category[0])
     
