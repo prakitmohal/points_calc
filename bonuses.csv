@@ -34,15 +34,11 @@ other,double,2
 rest,prestige,5
 rest,gold,4
 rest,cfu,3
-rest,csr,3
 rest,green,3
 rest,premier,3
-rest,csp,2
 rest-noamex,prestige,5
 rest-noamex,cfu,3
-rest-noamex,csr,3
 rest-noamex,premier,3
-rest-noamex,csp,2
 travel,csr,3
 travel,green,3
 travel,csp,2
