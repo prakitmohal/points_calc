@@ -12,7 +12,7 @@ adjust as needed for your particular Linux installation
 
 Q: how do I run this thing?
 A:
-> python calc.py
+> python3 calc.py
 
 Q: What are each of the sheets
 A: Each sheet is a CSV file with the following
