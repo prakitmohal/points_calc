@@ -23,7 +23,7 @@ maxIndex = {}
 curIndex = {}
 header = []
 
-print "Analyzing Categories:",numCats
+print ("Analyzing Categories:",numCats)
 
 for x in range(numCats):
 
@@ -35,10 +35,10 @@ for x in range(numCats):
     bonusSplit[x].points = bonusSplit[x]["mult"] * annualSpend.yearly_spending[x]
    
     if debug:
-        print "[DB]Category:", bonusSplit[x].category.iloc[0], \
+        print ("[DB]Category:", bonusSplit[x].category.iloc[0], \
         "Spend:", annnualSpend.yearly_spending[x], \
         "Mult:", bonusSplit[x].mult.iloc[0], \
-        "Points:", bonusSplit[x].points.iloc[0]
+        "Points:", bonusSplit[x].points.iloc[0])
     
     del bonusSplit[x]["mult"]
 
@@ -56,7 +56,7 @@ for x in range(numCats):
 header.extend(("amexPts","chasePts","citiPts","fee","credits","profit"))
 options = []
 
-print "Table Initialized with rows:",numOptions
+print ("Table Initialized with rows:",numOptions)
 numCards = len(fees)
 
 # Populate Table
@@ -150,8 +150,8 @@ for x in range(numOptions):
             curIndex[y+1] = curIndex[y+1] + 1
     
     if(x % 500 == 0):
-        print "Row", x, "analyzed out of", numOptions, "- percent complete:", \
-                "{:.2%}".format(float(x)/numOptions)    
+        print ("Row", x, "analyzed out of", numOptions, "- percent complete:", \
+                "{:.2%}".format(float(x)/numOptions))    
 
 # Display the top 50 options and make it look pretty
 print ("Analyzing results, please be patient, may take around a minute")
@@ -169,5 +169,5 @@ optionsFrame['credits'] = optionsFrame['credits'].map("${:,.2f}".format)
 optionsFrame['profit'] = optionsFrame['profit'].map("${:,.2f}".format)
 
 print ("\n")
-print optionsFrame.to_string(index=False)
+print (optionsFrame.to_string(index=False))
 optionsFrame.to_csv("output.csv",index=None)
