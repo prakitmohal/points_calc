@@ -8,10 +8,6 @@ airfare,premier,3
 airfare,csp,2
 airfare,double,2
 airfare,cfu,1.5
-dummyChase,cfu,0
-dummyChase,csp,0
-dummyCiti,double,0
-dummyCiti,premier,0
 freedom,cff,5
 gas,pref,3
 gas,premier,3

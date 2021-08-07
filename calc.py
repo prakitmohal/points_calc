@@ -1,7 +1,7 @@
 import pandas
 pandas.options.mode.chained_assignment = None # removes warning
 
-debug = False
+debug = True
 
 # read in the CSVs
 fees = pandas.read_csv('fees.csv',index_col=0)
@@ -14,6 +14,25 @@ amex = pointValues.loc["amex","value"]
 chase = pointValues.loc["chase","value"]
 citi = pointValues.loc["citi","value"]
 default = pointValues.loc["default","value"]
+
+# add dummyChase/dummyCiti cards to tables manually to simplify files
+newRow = {'category':'dummyChase','yearly_spending':0}
+annualSpend = annualSpend.append(newRow, ignore_index=True)
+newRow = {'category':'dummyCiti','yearly_spending':0}
+annualSpend = annualSpend.append(newRow, ignore_index=True)
+annualSpend.sort_values(by=['category'],inplace=True)
+annualSpend.reset_index(drop=True,inplace=True)
+
+newRow = {'category':'dummyChase','card':'cfu','mult':0}
+multipliers = multipliers.append(newRow, ignore_index=True)
+newRow = {'category':'dummyChase','card':'csp','mult':0}
+multipliers = multipliers.append(newRow, ignore_index=True)
+newRow = {'category':'dummyCiti','card':'double','mult':0}
+multipliers = multipliers.append(newRow, ignore_index=True)
+newRow = {'category':'dummyCiti','card':'premier','mult':0}
+multipliers = multipliers.append(newRow, ignore_index=True)
+multipliers.sort_values(by=['category'],inplace=True)
+multipliers.reset_index(drop=True,inplace=True)
 
 # category counts
 numOptions = 1
@@ -36,7 +55,7 @@ for x in range(numCats):
    
     if debug:
         print ("[DB]Category:", bonusSplit[x].category.iloc[0], \
-        "Spend:", annnualSpend.yearly_spending[x], \
+        "Spend:", annualSpend.yearly_spending[x], \
         "Mult:", bonusSplit[x].mult.iloc[0], \
         "Points:", bonusSplit[x].points.iloc[0])
     
