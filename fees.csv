@@ -1,13 +1,13 @@
 card,issuer,fee,benefits
-plat,amex,550,200
-gold,amex,250,100
+plat,amex,695,0
+gold,amex,250,0
 green,amex,150,0
 pref,amex,95,0
 everyday,amex,0,0
-csr,chase,625,300
+csr,chase,550,0
 csp,chase,95,0
 cff,chase,0,0
 cfu,chase,0,0
-prestige,citi,495,250
+prestige,citi,495,0
 premier,citi,95,0
 double,citi,0,0
