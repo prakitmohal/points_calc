@@ -1,13 +1,11 @@
 import pandas
 pandas.options.mode.chained_assignment = None # removes warning
 
-debug = True
-
 # read in the CSVs
-fees = pandas.read_csv('fees.csv',index_col=0)
 pointValues = pandas.read_csv('pointValues.csv',index_col=0)
-annualSpend = pandas.read_csv('annualSpend.csv')
 multipliers = pandas.read_csv('multipliers.csv')
+annualSpend = pandas.read_csv('annualSpend.csv')
+fees = pandas.read_csv('fees.csv')
 
 # extract point values
 amex = pointValues.loc["amex","value"]
@@ -15,14 +13,7 @@ chase = pointValues.loc["chase","value"]
 citi = pointValues.loc["citi","value"]
 default = pointValues.loc["default","value"]
 
-# add dummyChase/dummyCiti cards to tables manually to simplify files
-newRow = {'category':'dummyChase','yearly_spending':0}
-annualSpend = annualSpend.append(newRow, ignore_index=True)
-newRow = {'category':'dummyCiti','yearly_spending':0}
-annualSpend = annualSpend.append(newRow, ignore_index=True)
-annualSpend.sort_values(by=['category'],inplace=True)
-annualSpend.reset_index(drop=True,inplace=True)
-
+# now add dummyChase/dummyCiti cards to tables manually to simplify files
 newRow = {'category':'dummyChase','card':'cfu','mult':0}
 multipliers = multipliers.append(newRow, ignore_index=True)
 newRow = {'category':'dummyChase','card':'csp','mult':0}
@@ -31,10 +22,46 @@ newRow = {'category':'dummyCiti','card':'double','mult':0}
 multipliers = multipliers.append(newRow, ignore_index=True)
 newRow = {'category':'dummyCiti','card':'premier','mult':0}
 multipliers = multipliers.append(newRow, ignore_index=True)
-multipliers.sort_values(by=['category'],inplace=True)
-multipliers.reset_index(drop=True,inplace=True)
 
-# category counts
+newRow = {'category':'dummyChase','yearly_spending':0}
+annualSpend = annualSpend.append(newRow, ignore_index=True)
+newRow = {'category':'dummyCiti','yearly_spending':0}
+annualSpend = annualSpend.append(newRow, ignore_index=True)
+
+# lets clean up our input dataframes to take into account anything that should be skipped
+# remove it from the fees and multipliers list 
+for x in range(len(fees)):
+
+	if fees.analyze[x] == False:
+
+		for y in range(len(multipliers)):
+			if fees.card[x] == multipliers.card[y]:
+				multipliers.drop(y,inplace = True)
+		
+		fees.drop(x,inplace = True)
+		multipliers.reset_index(drop=True,inplace=True)
+
+fees.set_index('card',inplace=True)
+
+# if the category doesn't exist in multipliers remove it from the annual spend
+for x in range(len(annualSpend)):
+
+	drop = 1
+
+	for y in range(len(multipliers)):
+		if annualSpend.category[x] == multipliers.category[y]:
+			drop = 0
+			break
+
+	if (drop == True):
+		annualSpend.drop(x,inplace = True)
+
+annualSpend.reset_index(drop=True,inplace=True)
+
+# we're taking the multipliers and multiplying each row by annualSpend to 
+# get the number of points that are earned per card based on yearly spending
+# we are also divvying up the multiplers table by category
+# once this is done we're complete with annualSpend
 numOptions = 1
 numCats = len(annualSpend)
 bonusSplit = {}
@@ -53,12 +80,6 @@ for x in range(numCats):
     bonusSplit[x]["points"] = 0
     bonusSplit[x].points = bonusSplit[x]["mult"] * annualSpend.yearly_spending[x]
    
-    if debug:
-        print ("[DB]Category:", bonusSplit[x].category.iloc[0], \
-        "Spend:", annualSpend.yearly_spending[x], \
-        "Mult:", bonusSplit[x].mult.iloc[0], \
-        "Points:", bonusSplit[x].points.iloc[0])
-    
     del bonusSplit[x]["mult"]
 
     # reset the index
@@ -70,6 +91,7 @@ for x in range(numCats):
     curIndex[x] = 0
     maxIndex[x] = len(bonusSplit[x])
     numOptions = numOptions * maxIndex[x]
+
 
 # create header for dictionary
 header.extend(("amexPts","chasePts","citiPts","fee","credits","profit"))
@@ -106,12 +128,12 @@ for x in range(numOptions):
             dummyChase = True
         elif (bonusSplit[y].category.iloc[0] == "dummyCiti") and (bonusSplit[y].card[curIndex[y]] == "premier"):
             dummyCiti = True
-
+    
     # If the dummy card is a CSP/Premier AND it appears in the list for spend, 
     # we're going to get a duplicate entry. don't process it
     if not ((dummyChase == True and rowList.count("csp") > 1) or \
             (dummyCiti == True and rowList.count("premier") > 1)):
-
+        
         # remove duplicates so we only add fees once
         cardLookup = list(set(rowList))
             
