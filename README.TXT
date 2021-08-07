@@ -44,7 +44,7 @@ A: Right, so there are certain scenarios where even if expenses arent put on a c
 it's worth holding onto to get the giant bump in another category.
 
 Example: Even with no Travel or Dining spend you may want to hold a CSP anyway to unlock
-the higher value from point transvers
+the higher value from point transfers from a Freedom card
 
 Q: Surely there must be a better way to do that
 A: There probably is. And don't call me Shirley
