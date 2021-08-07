@@ -29,7 +29,7 @@ newRow = {'category':'dummyCiti','yearly_spending':0}
 annualSpend = annualSpend.append(newRow, ignore_index=True)
 
 # lets clean up our input dataframes to take into account anything that should be skipped
-# remove it from the fees and multipliers list 
+# remove those cards from the fees and multipliers list 
 for x in range(len(fees)):
 
 	if fees.analyze[x] == False:
@@ -92,7 +92,6 @@ for x in range(numCats):
     maxIndex[x] = len(bonusSplit[x])
     numOptions = numOptions * maxIndex[x]
 
-
 # create header for dictionary
 header.extend(("amexPts","chasePts","citiPts","fee","credits","profit"))
 options = []
@@ -128,12 +127,12 @@ for x in range(numOptions):
             dummyChase = True
         elif (bonusSplit[y].category.iloc[0] == "dummyCiti") and (bonusSplit[y].card[curIndex[y]] == "premier"):
             dummyCiti = True
-    
+
     # If the dummy card is a CSP/Premier AND it appears in the list for spend, 
     # we're going to get a duplicate entry. don't process it
     if not ((dummyChase == True and rowList.count("csp") > 1) or \
             (dummyCiti == True and rowList.count("premier") > 1)):
-        
+
         # remove duplicates so we only add fees once
         cardLookup = list(set(rowList))
             
