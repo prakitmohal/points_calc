@@ -28,8 +28,7 @@ annualSpend = annualSpend.append(newRow, ignore_index=True)
 newRow = {'category':'dummyCiti','yearly_spending':0}
 annualSpend = annualSpend.append(newRow, ignore_index=True)
 
-# lets clean up our input dataframes to take into account anything that should be
-# skipped by user request [analyze=0] 
+# lets clean up our input dataframes to take into account anything that should be skipped
 # remove those cards from the fees and multipliers list 
 for x in range(len(fees)):
 
@@ -44,18 +43,15 @@ for x in range(len(fees)):
 
 fees.set_index('card',inplace=True)
 
-# if the category no longer exist in multipliers OR spend is zero
-# remove it from the annual spend
+# if the category doesn't exist in multipliers remove it from the annual spend
 for x in range(len(annualSpend)):
 
 	drop = 1
 
-	if annualSpend.yearly_spending[x] != 0:
-	
-		for y in range(len(multipliers)):
-			if annualSpend.category[x] == multipliers.category[y]:
-				drop = 0
-				break
+	for y in range(len(multipliers)):
+		if annualSpend.category[x] == multipliers.category[y]:
+			drop = 0
+			break
 
 	if (drop == True):
 		annualSpend.drop(x,inplace = True)
