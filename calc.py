@@ -13,7 +13,15 @@ chase = pointValues.loc["chase","value"]
 citi = pointValues.loc["citi","value"]
 default = pointValues.loc["default","value"]
 
-# now add dummyChase/dummyCiti cards to tables manually to simplify files
+# if annual spend is 0 lets remove them now to save time
+for x in range(len(annualSpend)):
+
+	if annualSpend.yearly_spending[x] == 0:
+		annualSpend.drop(x,inplace = True)
+
+annualSpend.reset_index(drop=True,inplace=True)
+
+# now add dummyChase/dummyCiti cards to tables manually
 newRow = {'category':'dummyChase','card':'cfu','mult':0}
 multipliers = multipliers.append(newRow, ignore_index=True)
 newRow = {'category':'dummyChase','card':'csp','mult':0}
@@ -29,7 +37,7 @@ newRow = {'category':'dummyCiti','yearly_spending':0}
 annualSpend = annualSpend.append(newRow, ignore_index=True)
 
 # lets clean up our input dataframes to take into account anything that should be skipped
-# remove those cards from the fees and multipliers list 
+# remove cards that the user wants to skip from the fees and multipliers list 
 for x in range(len(fees)):
 
 	if fees.analyze[x] == False:
@@ -43,7 +51,7 @@ for x in range(len(fees)):
 
 fees.set_index('card',inplace=True)
 
-# if the category doesn't exist in multipliers remove it from the annual spend
+# if the category doesn't exist in multipliers anymore remove it from the annual spend
 for x in range(len(annualSpend)):
 
 	drop = 1
