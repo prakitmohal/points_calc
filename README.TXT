@@ -45,6 +45,3 @@ it's worth holding onto to get the giant bump in another category.
 
 Example: Even with no Travel or Dining spend you may want to hold a CSP anyway to unlock
 the higher value from point transfers for Freedom card spend
-
-Q: Surely there must be a better way to do that
-A: There probably is. And don't call me Shirley
