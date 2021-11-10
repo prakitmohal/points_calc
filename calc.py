@@ -2,10 +2,10 @@ import pandas
 pandas.options.mode.chained_assignment = None # removes warning
 
 # read in the CSVs
-pointValues = pandas.read_csv('pointValues.csv',index_col=0)
-multipliers = pandas.read_csv('multipliers.csv')
-annualSpend = pandas.read_csv('annualSpend.csv')
-fees = pandas.read_csv('fees.csv')
+pointValues = pandas.read_csv('config/pointValues.csv',index_col=0)
+multipliers = pandas.read_csv('config/multipliers.csv')
+annualSpend = pandas.read_csv('config/annualSpend.csv')
+fees = pandas.read_csv('config/fees.csv')
 
 # extract point values
 amex = pointValues.loc["amex","value"]
