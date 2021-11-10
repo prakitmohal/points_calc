@@ -175,8 +175,7 @@ for x in range(numOptions):
             elif (issuer == "citi"):
                 citiPts = citiPts + pointList[y]
                 
-        profit = fee + credits + (amexPts * amex)
-        profit = fee + credits + (caponePts * capone)
+        profit = fee + credits + (amexPts * amex) + (caponePts * capone)
 
         if (chaseTx == True):
             profit = chasePts * chase + profit
