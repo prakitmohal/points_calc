@@ -9,6 +9,7 @@ fees = pandas.read_csv('fees.csv')
 
 # extract point values
 amex = pointValues.loc["amex","value"]
+capone = pointValues.loc["capone","value"]
 chase = pointValues.loc["chase","value"]
 citi = pointValues.loc["citi","value"]
 default = pointValues.loc["default","value"]
@@ -101,7 +102,7 @@ for x in range(numCats):
     numOptions = numOptions * maxIndex[x]
 
 # create header for dictionary
-header.extend(("amexPts","chasePts","citiPts","fee","credits","profit"))
+header.extend(("amexPts","caponePts","chasePts","citiPts","fee","credits","profit"))
 options = []
 
 print ("Table Initialized with rows:",numOptions)
@@ -114,6 +115,7 @@ for x in range(numOptions):
     cardLookup = []
     pointList = []
     amexPts = 0
+    caponePts = 0
     chasePts = 0
     citiPts = 0
     fee = 0
@@ -166,12 +168,15 @@ for x in range(numOptions):
             # calculate points and add to profit
             if (issuer == "amex"):
                 amexPts = amexPts + pointList[y]
+            elif (issuer == "capone"):
+                caponePts = caponePts + pointList[y]
             elif (issuer == "chase"):
                 chasePts = chasePts + pointList[y]
             elif (issuer == "citi"):
                 citiPts = citiPts + pointList[y]
                 
         profit = fee + credits + (amexPts * amex)
+        profit = fee + credits + (caponePts * capone)
 
         if (chaseTx == True):
             profit = chasePts * chase + profit
@@ -184,7 +189,7 @@ for x in range(numOptions):
             profit = citiPts * default + profit
         
         # add the row to the table
-        rowList.extend((amexPts,chasePts,citiPts,fee,credits,profit))
+        rowList.extend((amexPts,caponePts,chasePts,citiPts,fee,credits,profit))
         options.append(rowList)
 
     # update indexes, check for overflow and adjust accordingly
@@ -209,6 +214,7 @@ optionsFrame.columns = header
 optionsFrame = optionsFrame.nlargest(50,"profit")
 
 optionsFrame['amexPts'] = optionsFrame['amexPts'].map("{:,.0f}".format)
+optionsFrame['caponePts'] = optionsFrame['caponePts'].map("{:,.0f}".format)
 optionsFrame['chasePts'] = optionsFrame['chasePts'].map("{:,.0f}".format)
 optionsFrame['citiPts'] = optionsFrame['citiPts'].map("{:,.0f}".format)
 
