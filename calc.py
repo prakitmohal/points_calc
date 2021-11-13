@@ -34,7 +34,6 @@ citiDummy = ""
 fees['net'] = 0
 
 # lets clean up our input dataframes to take into account anything that should be skipped
-
 # first remove cards that the user wants to skip from the fees and multipliers list
 # and calculate the net fee. then clean up the dataFrame
 for x in range(len(fees)):
@@ -44,7 +43,8 @@ for x in range(len(fees)):
         for y in range(len(multipliers)):
             if fees.card[x] == multipliers.card[y]:
                 multipliers.drop(y,inplace = True)
-		
+        		
+        # if they don't want it analyzed don't add it in later
         fees.drop(x,inplace = True)
         multipliers.reset_index(drop=True,inplace=True)
     
@@ -62,11 +62,10 @@ for x in range(len(fees)):
             citiNet = fees.net[x]
             citiDummy = "premier"    
 
-fees.set_index('card',inplace=True)
 fees.drop(columns=['fee','benefits','analyze'],inplace=True)
 
 # This isn't great code BUT it saves a bunch of cycles later on
-# Chase and requires an annual fee card for points transfers
+# Chase requires an annual fee card for points transfers
 # determine which one it is
 if (csrFound == True) and (cspFound == True):
     if (csrNet >= cspNet):
@@ -122,17 +121,20 @@ for x in range(numCats):
     # see if the card is in the list first before adding
     # this is applicable for everyday and cfu in certain categories
     if (category != "default" and category != "freedom"):
-        bonusSplit[x].loc[len(bonusSplit[x].index)] = [category,'double',2] 
-        bonusSplit[x].loc[len(bonusSplit[x].index)] = [category,'venturex',2] 
         
-        if ("cfu" not in bonusSplit[x].values):
+        if "double" in fees.values:
+            bonusSplit[x].loc[len(bonusSplit[x].index)] = [category,'double',2] 
+        if "venturex" in fees.values:
+            bonusSplit[x].loc[len(bonusSplit[x].index)] = [category,'venturex',2] 
+        
+        if ("cfu" not in bonusSplit[x].values and "cfu" in fees.values):
             bonusSplit[x].loc[len(bonusSplit[x].index)] = [category,'cfu',1.5] 
         
         # don't add the amex cards to the no amex category lol
         if (category != "rest-noamex"):
-            if ("pref" not in bonusSplit[x].values):
+            if ("pref" not in bonusSplit[x].values and "pref" in fees.values):
                 bonusSplit[x].loc[len(bonusSplit[x].index)] = [category,'pref',1.5]
-            if ("everyday" not in bonusSplit[x].values):
+            if ("everyday" not in bonusSplit[x].values and "everyday" in fees.values):
                 bonusSplit[x].loc[len(bonusSplit[x].index)] = [category,'everyday',1.2]
    
     # convert the yearly spending into points
@@ -153,6 +155,9 @@ for x in range(numCats):
 
 del(annualSpend)
 del(multipliers)
+
+# reset the index in fees
+fees.set_index('card',inplace=True)
 
 # create header for dictionary
 if (chaseDummy != ""):
@@ -202,7 +207,7 @@ for x in range(numOptions):
         # set the flags where appropriate
         if (cardLookup[y] == "csp") or (cardLookup[y] == "csr"):
             chaseFee = True
-        elif (cardLookup[y] == "premier") or (cardLookup[y] == "prestige"):
+        elif (cardLookup[y] == "premier"):
             citiFee = True
 
     # now we can go through the row and calculate the points
