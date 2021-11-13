@@ -13,6 +13,7 @@ capone = pointValues.loc["capone","value"]
 chase = pointValues.loc["chase","value"]
 citi = pointValues.loc["citi","value"]
 default = pointValues.loc["default","value"]
+del(pointValues)
 
 # if annual spend is 0 lets remove them now to save time
 for x in range(len(annualSpend)):
@@ -22,35 +23,85 @@ for x in range(len(annualSpend)):
 
 annualSpend.reset_index(drop=True,inplace=True)
 
-# now add dummyChase/dummyCiti cards to tables manually
-newRow = {'category':'dummyChase','card':'cfu','mult':0}
-multipliers = multipliers.append(newRow, ignore_index=True)
-newRow = {'category':'dummyChase','card':'csp','mult':0}
-multipliers = multipliers.append(newRow, ignore_index=True)
-newRow = {'category':'dummyCiti','card':'double','mult':0}
-multipliers = multipliers.append(newRow, ignore_index=True)
-newRow = {'category':'dummyCiti','card':'premier','mult':0}
-multipliers = multipliers.append(newRow, ignore_index=True)
-
-newRow = {'category':'dummyChase','yearly_spending':0}
-annualSpend = annualSpend.append(newRow, ignore_index=True)
-newRow = {'category':'dummyCiti','yearly_spending':0}
-annualSpend = annualSpend.append(newRow, ignore_index=True)
+csrFound = 0
+cspFound = 0
+premierFound = 0
+prestigeFound = 0
+csrNet = 0
+cspNet = 0
+premierNet = 0
+prestigeNet = 0
+chaseNet = 0
+citiNet = 0
+chaseDummy = ""
+citiDummy = ""
+fees['net'] = 0
 
 # lets clean up our input dataframes to take into account anything that should be skipped
-# remove cards that the user wants to skip from the fees and multipliers list 
+
+# first remove cards that the user wants to skip from the fees and multipliers list
+# and calculate the net fee. then clean up the dataFrame
 for x in range(len(fees)):
 
-	if fees.analyze[x] == False:
+    if fees.analyze[x] == False:
 
-		for y in range(len(multipliers)):
-			if fees.card[x] == multipliers.card[y]:
-				multipliers.drop(y,inplace = True)
+        for y in range(len(multipliers)):
+            if fees.card[x] == multipliers.card[y]:
+                multipliers.drop(y,inplace = True)
 		
-		fees.drop(x,inplace = True)
-		multipliers.reset_index(drop=True,inplace=True)
+        fees.drop(x,inplace = True)
+        multipliers.reset_index(drop=True,inplace=True)
+    
+    else: # calculate the net 
+        fees.net[x] = fees.benefits[x] - fees.fee[x]
+        
+        # let's see if this is a Chase or Citi annual fee card and store for later
+        if fees.card[x] == "csr":
+            csrFound = True
+            csrNet = fees.net[x]    
+        elif fees.card[x] == "csp":
+            cspFound = True
+            cspNet = fees.net[x]    
+        elif fees.card[x] == "prestige":
+            prestigeFound = True
+            prestigeNet = fees.net[x]    
+        elif fees.card[x] == "premier":
+            premierFound = True
+            premierNet = fees.net[x]    
 
 fees.set_index('card',inplace=True)
+fees.drop(columns=['fee','benefits','analyze'],inplace=True)
+
+# This isn't great code BUT it saves a bunch of cycles later on
+# Chase and Citi require an annual fee card for points transfers
+# this calls out if the user wants them analyzed to begin with
+if (csrFound == True) and (cspFound == True):
+    if (csrNet >= cspNet):
+        chaseNet = csrNet
+        chaseDummy = "csr"
+    else:
+        chaseNet = cspNet
+        chaseDummy = "csp"
+elif (csrFound == True):
+    chaseNet = csrNet
+    chaseDummy = "csr"
+elif (cspFound == True):
+    chaseNet = cspNet
+    chaseDummy = "csp"
+
+if (premierFound == True) and (prestigeFound == True):
+    if (prestigeNet >= premierNet):
+        citiNet = prestigeNet
+        citiDummy = "prestige"
+    else:
+        citiNet = premierNet
+        citiDummy = "premier"
+elif (premierFound == True):
+    citiNet = premierNet
+    citiDummy = "premier"
+elif (prestigeFound == True):
+    citiNet = prestigeNet
+    citiDummy = "prestige"
 
 # if the category doesn't exist in multipliers anymore remove it from the annual spend
 for x in range(len(annualSpend)):
@@ -70,7 +121,7 @@ annualSpend.reset_index(drop=True,inplace=True)
 # we're taking the multipliers and multiplying each row by annualSpend to 
 # get the number of points that are earned per card based on yearly spending
 # we are also divvying up the multiplers table by category
-# once this is done we're complete with annualSpend
+# once this is done we're complete with annualSpend and multipliers
 numOptions = 1
 numCats = len(annualSpend)
 bonusSplit = {}
@@ -101,8 +152,17 @@ for x in range(numCats):
     maxIndex[x] = len(bonusSplit[x])
     numOptions = numOptions * maxIndex[x]
 
+del(annualSpend)
+del(multipliers)
+
 # create header for dictionary
-header.extend(("amexPts","caponePts","chasePts","citiPts","fee","credits","profit"))
+if (chaseDummy != ""):
+    header.append("dummyChase")
+if (citiDummy != ""):
+    header.append("dummyCiti")
+
+header.extend(("amexPts","caponePts","chasePts","citiPts","netFees","profit"))
+
 options = []
 
 print ("Table Initialized with rows:",numOptions)
@@ -118,13 +178,12 @@ for x in range(numOptions):
     caponePts = 0
     chasePts = 0
     citiPts = 0
-    fee = 0
-    credits = 0
+    netFees = 0
     profit = 0
-    dummyChase = False
-    dummyCiti = False
-    chaseTx = False
-    citiTx = False
+    tempChase = ""
+    tempCiti = ""
+    chaseFee = False
+    citiFee = False
 
     # Build up the line
     for y in range(numCats):
@@ -132,64 +191,71 @@ for x in range(numOptions):
         rowList.append( bonusSplit[y].card[curIndex[y]] )
         pointList.append( bonusSplit[y].points[curIndex[y]] )
 
-        # note that an annual fee card is in the dummy slot for chase or citi
-        if (bonusSplit[y].category.iloc[0] == "dummyChase") and (bonusSplit[y].card[curIndex[y]] == "csp"):
-            dummyChase = True
-        elif (bonusSplit[y].category.iloc[0] == "dummyCiti") and (bonusSplit[y].card[curIndex[y]] == "premier"):
-            dummyCiti = True
-
-    # If the dummy card is a CSP/Premier AND it appears in the list for spend, 
-    # we're going to get a duplicate entry. don't process it
-    if not ((dummyChase == True and rowList.count("csp") > 1) or \
-            (dummyCiti == True and rowList.count("premier") > 1)):
-
-        # remove duplicates so we only add fees once
-        cardLookup = list(set(rowList))
+    # remove duplicates so we only add fees once
+    cardLookup = list(set(rowList))
             
-        # match them up with the card list 
-        for y in range(len(cardLookup)):
+    # match them up with the card list 
+    for y in range(len(cardLookup)):
 
-            fee = fee - fees.loc[cardLookup[y],"fee"]
-            credits = credits + fees.loc[cardLookup[y],"benefits"]
+        netFees = netFees + fees.loc[cardLookup[y],"net"]
 
-            # chase and citi require certain cards to get the full value
-            # set the flags where appropriate
-            if (cardLookup[y] == "csp") or (cardLookup[y] == "csr"):
-                chaseTx = True
-            elif (cardLookup[y] == "premier") or (cardLookup[y] == "prestige"):
-                citiTx = True
+        # chase and citi require certain cards to get the full value
+        # set the flags where appropriate
+        if (cardLookup[y] == "csp") or (cardLookup[y] == "csr"):
+            chaseFee = True
+        elif (cardLookup[y] == "premier") or (cardLookup[y] == "prestige"):
+            citiFee = True
 
-        # now we can go through the row and calculate the points
-        for y in range(numCats):
+    # now we can go through the row and calculate the points
+    for y in range(numCats):
 
-            # Look up the issuer
-            issuer= fees.loc[rowList[y],"issuer"]
-        
-            # calculate points and add to profit
-            if (issuer == "amex"):
-                amexPts = amexPts + pointList[y]
-            elif (issuer == "capone"):
-                caponePts = caponePts + pointList[y]
-            elif (issuer == "chase"):
-                chasePts = chasePts + pointList[y]
-            elif (issuer == "citi"):
-                citiPts = citiPts + pointList[y]
+        # Look up the issuer
+        issuer= fees.loc[rowList[y],"issuer"]
+      
+        # calculate points and add to profit
+        if (issuer == "amex"):
+            amexPts = amexPts + pointList[y]
+        elif (issuer == "capone"):
+            caponePts = caponePts + pointList[y]
+        elif (issuer == "chase"):
+            chasePts = chasePts + pointList[y]
+        elif (issuer == "citi"):
+            citiPts = citiPts + pointList[y]
                 
-        profit = fee + credits + (amexPts * amex) + (caponePts * capone)
+    profit = netFees + (amexPts * amex) + (caponePts * capone)
 
-        if (chaseTx == True):
-            profit = chasePts * chase + profit
-        else:
+    # this is where the magic happens from before
+    # If there are points but there's no annual fee card run the math
+    # and see if a dummy makes sense 
+    if (chaseFee == True):
+        profit = chasePts * chase + profit
+    elif (chaseDummy != ""):
+        if (chasePts * default > chasePts * chase + chaseNet):
             profit = chasePts * default + profit
-
-        if (citiTx == True):
-            profit = citiPts * citi + profit
         else:
+            netFees = netFees + chaseNet
+            profit = chasePts * chase + profit + chaseNet
+            tempChase = chaseDummy
+
+    if (citiFee == True):
+        profit = citiPts * citi + profit
+        tempCiti = ""
+    elif (citiDummy != ""):
+        if (citiPts * default > citiPts * citi + citiNet):
             profit = citiPts * default + profit
-        
-        # add the row to the table
-        rowList.extend((amexPts,caponePts,chasePts,citiPts,fee,credits,profit))
-        options.append(rowList)
+        else:
+            netFees = netFees + citiNet            
+            profit = citiPts * citi + profit + citiNet
+            tempCiti = citiDummy
+ 
+    # add the row to the table
+    if (chaseDummy != ""):
+        rowList.append(tempChase)
+    if (citiDummy != ""):
+        rowList.append(tempCiti)
+    
+    rowList.extend((amexPts,caponePts,chasePts,citiPts,netFees,profit))
+    options.append(rowList)
 
     # update indexes, check for overflow and adjust accordingly
     curIndex[0] = curIndex[0] + 1
@@ -201,7 +267,7 @@ for x in range(numOptions):
             curIndex[y] = 0
             curIndex[y+1] = curIndex[y+1] + 1
     
-    if(x % 500 == 0):
+    if(x % 1000 == 0):
         print ("Row", x, "analyzed out of", numOptions, "- percent complete:", \
                 "{:.2%}".format(float(x)/numOptions))    
 
@@ -217,8 +283,7 @@ optionsFrame['caponePts'] = optionsFrame['caponePts'].map("{:,.0f}".format)
 optionsFrame['chasePts'] = optionsFrame['chasePts'].map("{:,.0f}".format)
 optionsFrame['citiPts'] = optionsFrame['citiPts'].map("{:,.0f}".format)
 
-optionsFrame['fee'] = optionsFrame['fee'].map("${:,.2f}".format)
-optionsFrame['credits'] = optionsFrame['credits'].map("${:,.2f}".format)
+optionsFrame['netFees'] = optionsFrame['netFees'].map("${:,.2f}".format)
 optionsFrame['profit'] = optionsFrame['profit'].map("${:,.2f}".format)
 
 print ("\n")
