@@ -25,12 +25,8 @@ annualSpend.reset_index(drop=True,inplace=True)
 
 csrFound = 0
 cspFound = 0
-premierFound = 0
-prestigeFound = 0
 csrNet = 0
 cspNet = 0
-premierNet = 0
-prestigeNet = 0
 chaseNet = 0
 citiNet = 0
 chaseDummy = ""
@@ -62,19 +58,16 @@ for x in range(len(fees)):
         elif fees.card[x] == "csp":
             cspFound = True
             cspNet = fees.net[x]    
-        elif fees.card[x] == "prestige":
-            prestigeFound = True
-            prestigeNet = fees.net[x]    
         elif fees.card[x] == "premier":
-            premierFound = True
-            premierNet = fees.net[x]    
+            citiNet = fees.net[x]
+            citiDummy = "premier"    
 
 fees.set_index('card',inplace=True)
 fees.drop(columns=['fee','benefits','analyze'],inplace=True)
 
 # This isn't great code BUT it saves a bunch of cycles later on
-# Chase and Citi require an annual fee card for points transfers
-# this calls out if the user wants them analyzed to begin with
+# Chase and requires an annual fee card for points transfers
+# determine which one it is
 if (csrFound == True) and (cspFound == True):
     if (csrNet >= cspNet):
         chaseNet = csrNet
@@ -88,20 +81,6 @@ elif (csrFound == True):
 elif (cspFound == True):
     chaseNet = cspNet
     chaseDummy = "csp"
-
-if (premierFound == True) and (prestigeFound == True):
-    if (prestigeNet >= premierNet):
-        citiNet = prestigeNet
-        citiDummy = "prestige"
-    else:
-        citiNet = premierNet
-        citiDummy = "premier"
-elif (premierFound == True):
-    citiNet = premierNet
-    citiDummy = "premier"
-elif (prestigeFound == True):
-    citiNet = prestigeNet
-    citiDummy = "prestige"
 
 # if the category doesn't exist in multipliers anymore remove it from the annual spend
 for x in range(len(annualSpend)):
@@ -128,14 +107,34 @@ bonusSplit = {}
 maxIndex = {}
 curIndex = {}
 header = []
+category = ""
 
 print ("Analyzing Categories:",numCats)
 
 for x in range(numCats):
 
     # split into groups by category
-    bonusSplit[x] = multipliers.groupby(multipliers.category).get_group(annualSpend.category[x])
-    
+    category = annualSpend.category[x]
+    bonusSplit[x] = multipliers.groupby(multipliers.category).get_group(category)
+  
+    # add the defaults, but obviously don't add it to the default column
+    # skip the freedom column you'd need some odd values to beat 5% on a free card
+    # see if the card is in the list first before adding
+    # this is applicable for everyday and cfu in certain categories
+    if (category != "default" and category != "freedom"):
+        bonusSplit[x].loc[len(bonusSplit[x].index)] = [category,'double',2] 
+        bonusSplit[x].loc[len(bonusSplit[x].index)] = [category,'venturex',2] 
+        
+        if ("cfu" not in bonusSplit[x].values):
+            bonusSplit[x].loc[len(bonusSplit[x].index)] = [category,'cfu',1.5] 
+        
+        # don't add the amex cards to the no amex category lol
+        if (category != "rest-noamex"):
+            if ("pref" not in bonusSplit[x].values):
+                bonusSplit[x].loc[len(bonusSplit[x].index)] = [category,'pref',1.5]
+            if ("everyday" not in bonusSplit[x].values):
+                bonusSplit[x].loc[len(bonusSplit[x].index)] = [category,'everyday',1.2]
+   
     # convert the yearly spending into points
     bonusSplit[x]["points"] = 0
     bonusSplit[x].points = bonusSplit[x]["mult"] * annualSpend.yearly_spending[x]
@@ -267,7 +266,7 @@ for x in range(numOptions):
             curIndex[y] = 0
             curIndex[y+1] = curIndex[y+1] + 1
     
-    if(x % 1000 == 0):
+    if(x % 10000 == 0):
         print ("Row", x, "analyzed out of", numOptions, "- percent complete:", \
                 "{:.2%}".format(float(x)/numOptions))    
 
