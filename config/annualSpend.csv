@@ -1,10 +1,10 @@
 category,yearly_spending
 airfare,1000
+default,1000
 freedom,1000
 gas,1000
 groceries,1000
 hotels,1000
-other,1000
 rest,1000
 rest-noamex,1000
 travel,1000
