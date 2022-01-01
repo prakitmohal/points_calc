@@ -131,7 +131,7 @@ for x in range(numCats):
             bonusSplit[x].loc[len(bonusSplit[x].index)] = [category,'cfu',1.5] 
         
         # don't add the amex cards to the no amex category lol
-        if (category != "rest-noamex"):
+        if (category != "rest-noamex" or category != "groc-noamex"):
             if ("pref" not in bonusSplit[x].values and "pref" in fees.values):
                 bonusSplit[x].loc[len(bonusSplit[x].index)] = [category,'pref',1.5]
             if ("everyday" not in bonusSplit[x].values and "everyday" in fees.values):
